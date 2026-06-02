@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>GBHI - South Asia Fellowship Network | Atlantic Fellows for Equity in Brain Health</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb4d 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 1000;
+            position: relative;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .gbhi-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #fff 0%, #fdbb4d 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #1a2a6c;
+        }
+        
+        .header h1 { font-size: 18px; color: white; }
+        .header h1 span { color: #fdbb4d; }
+        .header p { color: rgba(255,255,255,0.7); font-size: 10px; margin-top: 2px; }
+        
+        .controls { display: flex; gap: 8px; }
+        
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .btn-primary { background: linear-gradient(135deg, #fdbb4d 0%, #ff8c00 100%); color: #1a2a6c; }
+        
+        .main-container { height: calc(100vh - 72px); position: relative; }
+        .map-container { height: 100%; width: 100%; position: relative; }
+        #southAsiaMap { height: 100%; width: 100%; }
+        
+        .sidebar {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            width: 340px;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 18px;
+            color: #e0e0e0;
+            z-index: 1000;
+            max-height: 85%;
+            overflow-y: auto;
+            border: 1px solid rgba(253,187,77,0.3);
+            pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        
+        .sidebar h3 {
+            color: #fdbb4d;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 2px solid #fdbb4d;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .fellow-name { font-size: 20px; font-weight: 800; color: #fdbb4d; margin-bottom: 5px; }
+        .fellow-credentials { font-size: 12px; color: #aaa; margin-bottom: 5px; }
+        .fellow-country { display: inline-block; padding: 3px 10px; background: rgba(255,255,255,0.1); border-radius: 20px; font-size: 11px; margin: 8px 0; }
+        .words-strength { font-style: italic; color: #fdbb4d; font-size: 12px; margin: 8px 0; padding: 8px; background: rgba(253,187,77,0.1); border-radius: 8px; }
+        .fellow-bio { line-height: 1.55; margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; font-size: 12px; max-height: 180px; overflow-y: auto; }
+        .vision-quote { background: rgba(253,187,77,0.08); padding: 10px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #fdbb4d; font-size: 12px; font-style: italic; }
+        .project-title { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #ff8c00; font-size: 12px; }
+        .connection-list { list-style: none; padding: 0; }
+        .connection-list li { padding: 6px 10px; margin: 4px 0; background: rgba(255,255,255,0.08); border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .connection-list li:hover { background: #fdbb4d; color: #1a2a6c; transform: translateX(4px); }
+        .close-sidebar { background: rgba(220,53,69,0.8); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 15px; width: 100%; font-weight: 500; transition: all 0.2s; }
+        .close-sidebar:hover { background: #dc3545; }
+        
+        .stats-bar {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #fdbb4d;
+            font-size: 11px;
+            z-index: 1000;
+            font-weight: 500;
+        }
+        
+        .legend-panel {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: #ddd;
+            font-size: 10px;
+            z-index: 1000;
+        }
+        
+        .custom-marker { cursor: pointer; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; gap: 8px; padding: 10px; }
+            .sidebar { width: 280px; right: 10px; top: 10px; padding: 12px; max-height: 75%; }
+            .fellow-bio { max-height: 150px; }
+        }
+        
+        .dark-popup .leaflet-popup-content-wrapper { background: #1a1a2e; color: white; border-radius: 10px; border: 1px solid #fdbb4d; }
+        .dark-popup .leaflet-popup-tip { background: #1a1a2e; }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #fdbb4d; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <div class="gbhi-icon"><i class="fas fa-brain"></i></div>
+            <div>
+                <h1>Global Brain Health Institute <span>| GBHI</span></h1>
+                <p>South Asia Fellowship Network • Atlantic Fellows for Equity in Brain Health</p>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="window.location.href='index.html'"><i class="fas fa-globe-americas"></i> Global Map</button>
+            <button class="btn" id="resetMapBtn"><i class="fas fa-home"></i> Reset Map</button>
+            <button class="btn btn-primary" id="clearLinesBtn"><i class="fas fa-eraser"></i> Clear Lines</button>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="map-container">
+            <div id="southAsiaMap"></div>
+            <div class="stats-bar">
+                <i class="fas fa-users"></i> 10 Fellows | <i class="fas fa-hand-pointer"></i> Click any node
+            </div>
+            <div class="legend-panel">
+                <span style="display:inline-block; width:10px; height:10px; background:#dc143c; border-radius:50%; margin-right:4px;"></span> Nepal
+                <span style="display:inline-block; width:10px; height:10px; background:#ff8c00; border-radius:50%; margin-right:4px; margin-left:8px;"></span> India
+                <span style="display:inline-block; width:10px; height:10px; background:#006a4e; border-radius:50%; margin-right:4px; margin-left:8px;"></span> Bangladesh
+                <span style="display:inline-block; width:10px; height:10px; background:#e6a817; border-radius:50%; margin-right:4px; margin-left:8px;"></span> SE Asia
+            </div>
+        </div>
+        
+        <div class="sidebar" id="sidebar">
+            <h3><i class="fas fa-user-tie"></i> Fellow Profile</h3>
+            <div id="fellowInfo">
+                <div style="text-align: center; color: #888; padding: 30px 20px;">
+                    <i class="fas fa-globe-asia" style="font-size: 42px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p><strong style="color:#fdbb4d;">Click any fellow marker</strong></p>
+                    <p style="font-size: 12px; margin-top: 10px;">View profile • Vision • Project • Network connections</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        const southAsiaMap = L.map('southAsiaMap').setView([20, 82], 5);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OSM & CartoDB',
+            maxZoom: 12,
+            minZoom: 5
+        }).addTo(southAsiaMap);
+        
+        const fellows = {
+            "Swati Bajpai": { 
+                name: "Swati Bajpai", credentials: "PhD, Clinical Neuropsychologist", country: "India", city: "New Delhi", lat: 28.6139, lng: 77.2090,
+                wordsStrength: "No health without mental health",
+                bio: "Works in the Memory Clinic at AIIMS New Delhi, providing cognitive assessment and cognitive retraining to persons with dementia, conducting dementia research and authoring publications.",
+                vision: "To reduce the impact of dementia, we need to create global awareness campaigns about dementia for young audiences and encourage intergenerational awareness.",
+                project: "Developing a digital cognitive training program for remote usage for persons with dementia to improve outreach and wellbeing.",
+                connections: ["Jayashree Dasgupta", "Rohith Khanna Deivasigamani", "Anusha Yasoda-Mohan"], year: "2023-2024" },
+            
+            "Jayashree Dasgupta": { 
+                name: "Jayashree Dasgupta", credentials: "PhD, MPhil, Clinical Psychologist", country: "India", city: "Gurugram", lat: 28.4595, lng: 77.0266,
+                wordsStrength: "Creative, patient, solution focused",
+                bio: "Clinical psychologist specializing in neuropsychology, Co-Founder of Samvedna Senior Care developing services for mental health and dementia.",
+                vision: "Increase public awareness about risk factors, fight stigma, and strive towards dementia-friendly and dementia-ready communities.",
+                project: "Developing contextually informed and culturally acceptable models of care for adults living with brain health conditions in India.",
+                connections: ["Swati Bajpai", "Rashed Suhrawardy", "Prekshya Thapa"], year: "2022-2023" },
+            
+            "Rohith Khanna Deivasigamani": { 
+                name: "Rohith Khanna Deivasigamani", credentials: "MD, Psychiatrist", country: "India", city: "Chennai", lat: 13.0827, lng: 80.2707,
+                wordsStrength: "Advocacy for the underserved",
+                bio: "Psychiatrist at Schizophrenia Research Foundation (SCARF) India, focusing on geriatric mental health in urban and rural areas with community-based dementia care.",
+                vision: "Create dementia-friendly communities providing integrated, community-based care that offers early support and upholds dignity.",
+                project: "Training local health workers in dementia care, using folk music and street plays for awareness and early detection in rural Tamil Nadu.",
+                connections: ["Swati Bajpai", "Anusha Yasoda-Mohan", "Jayashree Dasgupta"], year: "2024-2025" },
+            
+            "Anusha Yasoda-Mohan": { 
+                name: "Anusha Yasoda-Mohan", credentials: "PhD, Neuroscientist", country: "India", city: "Chennai", lat: 13.0827, lng: 80.2707,
+                wordsStrength: "Empathy, unconventional thinking, dreaming big",
+                bio: "Postdoctoral researcher at Trinity College Dublin investigating tinnitus mechanisms and their link to dementia risk factors using neuroimaging.",
+                vision: "Collaboration is key—bringing together society, expertise, and experience to address dementia through transdisciplinary work.",
+                project: "Co-creating BrainFM, an arts-science educational tool that uses movement to communicate brain health concepts.",
+                connections: ["Rohith Khanna Deivasigamani", "Swati Bajpai", "anGie seah"], year: "2024-2025" },
+            
+            "Rashed Suhrawardy": { 
+                name: "Rashed Suhrawardy", credentials: "MSc, Entrepreneur", country: "Bangladesh", city: "Dhaka", lat: 23.8103, lng: 90.4125,
+                wordsStrength: "Compassionate visionary leader",
+                bio: "Dementia care specialist, founder of Probin Seba, co-founder of Dementia Care Foundation Bangladesh, advocating for national dementia policy.",
+                vision: "Develop a 'Together for Tomorrow' movement to achieve a dementia-friendly society with local and global stakeholder collaboration.",
+                project: "Developing a national dementia plan and a dementia-friendly village model in rural Bangladesh.",
+                connections: ["Jayashree Dasgupta", "Prekshya Thapa", "Melissa Chan"], year: "2023-2024" },
+            
+            "Prekshya Thapa": { 
+                name: "Prekshya Thapa", credentials: "MSN, BSN, Psychiatric Nurse", country: "Nepal", city: "Dharan", lat: 26.8142, lng: 87.2833,
+                wordsStrength: "Determination, networking, perseverance",
+                bio: "Psychiatric nurse, academic and researcher at BP Koirala Institute of Health Sciences, working on dementia prevalence research in Nepal.",
+                vision: "Raise awareness, invest in research, and develop effective policies and dementia care plans, particularly in low- and middle-income countries.",
+                project: "Estimating community prevalence of dementia in Nepal to inform a National Dementia Care Plan.",
+                connections: ["Rashed Suhrawardy", "Jayashree Dasgupta", "Melissa Chan"], year: "2023-2024" },
+            
+            "Melissa Chan": { 
+                name: "Melissa Chan", credentials: "Service Designer & Social Entrepreneur", country: "Singapore", city: "Singapore", lat: 1.3521, lng: 103.8198,
+                wordsStrength: "Listen, empathize, connect, co-create, build",
+                bio: "Service designer working with health and community organizations, founder of Project We Forgot, former President of World Young Leaders in Dementia.",
+                vision: "Build collective conversations around brain health and co-create strategies to meet long-term social, emotional and physical care needs.",
+                project: "Leading CARA by Dementia Singapore, a national platform supporting safe return for persons living with dementia.",
+                connections: ["Peny Chan", "anGie seah", "Rashed Suhrawardy"], year: "2024-2025" },
+            
+            "Yuen Khuan 'Peny' Chan": { 
+                name: "Yuen Khuan 'Peny' Chan", credentials: "BA, Vocal Coach & Arts Facilitator", country: "Malaysia", city: "Penang", lat: 5.4141, lng: 100.3288,
+                wordsStrength: "Dream big, bridging arts and social care",
+                bio: "Performer, co-founder of Tsui Collective and ArtsProud, using performing arts to support seniors' emotional and cognitive wellbeing.",
+                vision: "Advance brain health by integrating arts, culture, and community care to foster empathy, connection, and creativity.",
+                project: "Designing arts-based programs using music, movement, and storytelling to engage older adults and enhance memory recall.",
+                connections: ["Melissa Chan", "anGie seah", "Fasihah Irfani"], year: "2024-2025" },
+            
+            "Fasihah Irfani": { 
+                name: "Fasihah Irfani", credentials: "MD, Neurologist", country: "Indonesia", city: "Medan", lat: 3.5952, lng: 98.6722,
+                wordsStrength: "Kindness, gratitude, tenacity",
+                bio: "Behavioral neurologist and lecturer at Universitas Sumatera Utara, focusing on public campaigns and early detection of dementia.",
+                vision: "Intersectoral and multidisciplinary collaboration between clinicians, government, educational institutions, private sectors, and communities.",
+                project: "Public awareness campaigns, cognitive screening programs, and post-diagnostic support systems in Indonesia.",
+                connections: ["Peny Chan", "Swati Bajpai", "anGie seah"], year: "2023-2024" },
+            
+            "anGie seah": { 
+                name: "anGie seah", credentials: "BA, Artist", country: "Singapore", city: "Singapore", lat: 1.3521, lng: 103.8198,
+                wordsStrength: "Uplifting others, bridging communities, nurturing empathy",
+                bio: "Multi-disciplinary artist with two decades of socially engaged practice, integrating visual arts, sound, and performance for wellbeing.",
+                vision: "Harness art to foster empathy, build resilience, and reduce stigma through creative, community-based interventions.",
+                project: "Developing art-based toolkits for cognitive engagement in dementia and stroke patients, collaborating with therapists.",
+                connections: ["Melissa Chan", "Peny Chan", "Anusha Yasoda-Mohan"], year: "2025-2026" }
+        };
+        
+        let markers = [];
+        let currentLines = [];
+        
+        function getColor(country) {
+            if (country === "Nepal") return "#dc143c";
+            if (country === "India") return "#ff8c00";
+            if (country === "Bangladesh") return "#006a4e";
+            return "#e6a817";
+        }
+        
+        function clearAllConnections() {
+            currentLines.forEach(line => southAsiaMap.removeLayer(line));
+            currentLines = [];
+        }
+        
+        function drawConnectionsForFellow(fellowId) {
+            clearAllConnections();
+            const fellow = fellows[fellowId];
+            if (!fellow || !fellow.connections) return;
+            fellow.connections.forEach(connId => {
+                const target = fellows[connId];
+                if (target) {
+                    const line = L.polyline([[fellow.lat, fellow.lng], [target.lat, target.lng]], {
+                        color: '#fdbb4d', weight: 3, opacity: 0.85                    }).addTo(southAsiaMap);
+                    currentLines.push(line);
+                }
+            });
+        }
+        
+        function showFellowDetails(fellowId) {
+            const f = fellows[fellowId];
+            if (!f) return;
+            const flag = f.country === "Nepal" ? "🇳🇵" : (f.country === "India" ? "🇮🇳" : (f.country === "Bangladesh" ? "🇧🇩" : "🇸🇬🇲🇾🇮🇩"));
+            
+            const connectionsList = f.connections.map(connId => {
+                const c = fellows[connId];
+                if (!c) return '';
+                const cFlag = c.country === "Nepal" ? "🇳🇵" : (c.country === "India" ? "🇮🇳" : (c.country === "Bangladesh" ? "🇧🇩" : "🌏"));
+                return `<li onclick="selectConnectedFellow('${connId}')">
+                            <i class="fas fa-user-friends"></i> <strong>${c.name}</strong> ${cFlag} (${c.country})
+                        </li>`;
+            }).join('');
+            
+            document.getElementById('fellowInfo').innerHTML = `
+                <div>
+                    <div class="fellow-name">${f.name}</div>
+                    <div class="fellow-credentials">${f.credentials}</div>
+                    <div class="fellow-country">${flag} ${f.city}, ${f.country} | ${f.year}</div>
+                    <div class="words-strength"><i class="fas fa-quote-left"></i> "${f.wordsStrength}"</div>
+                    <div class="fellow-bio"><strong>📖 Current Work</strong><br>${f.bio}</div>
+                    <div class="vision-quote"><strong>🌟 Vision</strong><br>"${f.vision}"</div>
+                    <div class="project-title"><strong>🔬 Key Initiative</strong><br>${f.project}</div>
+                    <div style="margin-top: 15px;">
+                        <h4 style="color:#fdbb4d; margin-bottom: 8px;"><i class="fas fa-project-diagram"></i> Network (${f.connections.length} connections)</h4>
+                        <ul class="connection-list">${connectionsList}</ul>
+                    </div>
+                    <button class="close-sidebar" onclick="clearSidebarAndLines()"><i class="fas fa-times"></i> Close</button>
+                </div>
+            `;
+            drawConnectionsForFellow(fellowId);
+            markers.forEach(m => { if (m.options.fellowId === fellowId) m.openPopup(); });
+        }
+        
+        function selectConnectedFellow(fellowId) {
+            showFellowDetails(fellowId);
+            const f = fellows[fellowId];
+            if (f) southAsiaMap.flyTo([f.lat, f.lng], 8, { duration: 0.8 });
+        }
+        
+        function clearSidebarAndLines() {
+            clearAllConnections();
+            document.getElementById('fellowInfo').innerHTML = `
+                <div style="text-align: center; color: #888; padding: 30px 20px;">
+                    <i class="fas fa-globe-asia" style="font-size: 42px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p><strong style="color:#fdbb4d;">Click any fellow marker</strong></p>
+                    <p style="font-size: 12px; margin-top: 10px;">View profile • Vision • Project • Network connections</p>
+                </div>
+            `;
+        }
+        
+        function resetView() {
+            southAsiaMap.setView([20, 82], 5);
+            clearSidebarAndLines();
+        }
+        
+        function createMarker(fellow, id) {
+            const markerColor = getColor(fellow.country);
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background:${markerColor}; width:14px; height:14px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px ${markerColor};"></div>`,
+                iconSize: [20, 20], popupAnchor: [0, -10]
+            });
+            const flag = fellow.country === "Nepal" ? "🇳🇵" : (fellow.country === "India" ? "🇮🇳" : (fellow.country === "Bangladesh" ? "🇧🇩" : "🌏"));
+            const marker = L.marker([fellow.lat, fellow.lng], { icon: customIcon, fellowId: id }).addTo(southAsiaMap);
+            marker.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; min-width: 200px; background: #1a1a2e; color: white; padding: 8px; border-radius: 8px;">
+                    <strong style="font-size: 16px; color: #fdbb4d;">${fellow.name}</strong><br>
+                    <span>${flag} ${fellow.city}, ${fellow.country}</span><br>
+                    <span style="font-size: 11px; opacity: 0.8;">🎓 ${fellow.year}</span><br>
+                    <span style="font-size: 11px; font-style: italic;">"${fellow.wordsStrength.substring(0, 60)}..."</span><br>
+                    <hr style="margin: 8px 0; border-color: #333;">
+                    <button onclick="showFellowDetails('${id}')" style="margin-top: 5px; padding: 6px 12px; background: linear-gradient(135deg, #fdbb4d, #ff8c00); color: #1a2a6c; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;">
+                        <i class="fas fa-user-graduate"></i> View Full Profile
+                    </button>
+                </div>
+            `, { className: 'dark-popup' });
+            marker.on('click', () => showFellowDetails(id));
+            return marker;
+        }
+        
+        Object.keys(fellows).forEach(key => { markers.push(createMarker(fellows[key], key)); });
+        
+        document.getElementById('resetMapBtn').addEventListener('click', resetView);
+        document.getElementById('clearLinesBtn').addEventListener('click', clearAllConnections);
+        
+        console.log("🧠 GBHI South Asia Network Loaded — 10 fellows");
+    </script>
+</body>
+</html>

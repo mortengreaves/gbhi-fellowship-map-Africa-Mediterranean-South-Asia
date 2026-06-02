@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>GBHI - Mediterranean Fellowship Network | Atlantic Fellows for Equity in Brain Health</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb4d 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 1000;
+            position: relative;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .gbhi-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #fff 0%, #fdbb4d 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #1a2a6c;
+        }
+        
+        .header h1 { font-size: 18px; color: white; }
+        .header h1 span { color: #fdbb4d; }
+        .header p { color: rgba(255,255,255,0.7); font-size: 10px; margin-top: 2px; }
+        
+        .controls { display: flex; gap: 8px; }
+        
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .btn-primary { background: linear-gradient(135deg, #fdbb4d 0%, #ff8c00 100%); color: #1a2a6c; }
+        
+        .main-container { height: calc(100vh - 72px); position: relative; }
+        .map-container { height: 100%; width: 100%; position: relative; }
+        #medMap { height: 100%; width: 100%; }
+        
+        .sidebar {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            width: 340px;
+            background: rgba(0, 0, 0, 0.94);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 18px;
+            color: #e0e0e0;
+            z-index: 1000;
+            max-height: 85%;
+            overflow-y: auto;
+            border: 1px solid rgba(253,187,77,0.3);
+            pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        
+        .sidebar h3 {
+            color: #fdbb4d;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 2px solid #fdbb4d;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .fellow-name { font-size: 20px; font-weight: 800; color: #fdbb4d; margin-bottom: 5px; }
+        .fellow-country { display: inline-block; padding: 3px 10px; background: rgba(255,255,255,0.1); border-radius: 20px; font-size: 11px; margin: 8px 0; }
+        .fellow-bio { line-height: 1.55; margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; font-size: 12px; max-height: 180px; overflow-y: auto; }
+        .current-work { background: rgba(253,187,77,0.1); padding: 10px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #fdbb4d; font-size: 12px; }
+        .vision-quote { background: rgba(253,187,77,0.08); padding: 10px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #ff8c00; font-size: 12px; font-style: italic; }
+        .motivation { background: rgba(100,100,200,0.08); padding: 10px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #88aaff; font-size: 12px; }
+        .education { font-size: 11px; color: #aaa; margin-top: 10px; padding-top: 8px; border-top: 1px solid #333; }
+        
+        .stats-bar {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #fdbb4d;
+            font-size: 11px;
+            z-index: 1000;
+            font-weight: 500;
+        }
+        
+        .legend-panel {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: #ddd;
+            font-size: 10px;
+            z-index: 1000;
+        }
+        
+        .custom-marker { cursor: pointer; }
+        .custom-marker:hover { transform: scale(1.5); z-index: 1000; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; gap: 8px; padding: 10px; }
+            .sidebar { width: 280px; right: 10px; top: 10px; padding: 12px; max-height: 75%; }
+            .fellow-bio, .current-work, .vision-quote, .motivation { max-height: 120px; }
+        }
+        
+        .dark-popup .leaflet-popup-content-wrapper { background: #1a1a2e; color: white; border-radius: 10px; border: 1px solid #fdbb4d; }
+        .dark-popup .leaflet-popup-tip { background: #1a1a2e; }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #fdbb4d; border-radius: 5px; }
+        
+        .close-sidebar { background: rgba(220,53,69,0.8); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 15px; width: 100%; font-weight: 500; transition: all 0.2s; }
+        .close-sidebar:hover { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <div class="gbhi-logo"><i class="fas fa-brain"></i></div>
+            <div>
+                <h1>Global Brain Health Institute <span>| GBHI</span></h1>
+                <p>Mediterranean Fellowship Network • Atlantic Fellows for Equity in Brain Health</p>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="window.location.href='index.html'"><i class="fas fa-globe-americas"></i> 🌍 Global Map</button>
+            <button class="btn" id="resetMapBtn"><i class="fas fa-home"></i> Reset Map</button>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="map-container">
+            <div id="medMap"></div>
+            <div class="stats-bar">
+                <i class="fas fa-users"></i> 14 Fellows | <i class="fas fa-hand-pointer"></i> Click any node
+            </div>
+            <div class="legend-panel">
+                <span style="display:inline-block; width:10px; height:10px; background:#ff4444; border-radius:50%; margin-right:4px;"></span> Spain
+                <span style="display:inline-block; width:10px; height:10px; background:#44aa44; border-radius:50%; margin-right:4px; margin-left:6px;"></span> France
+                <span style="display:inline-block; width:10px; height:10px; background:#ff9933; border-radius:50%; margin-right:4px; margin-left:6px;"></span> Turkey
+                <span style="display:inline-block; width:10px; height:10px; background:#cc6600; border-radius:50%; margin-right:4px; margin-left:6px;"></span> Egypt
+                <span style="display:inline-block; width:10px; height:10px; background:#4466cc; border-radius:50%; margin-right:4px; margin-left:6px;"></span> Greece
+            </div>
+        </div>
+        
+        <div class="sidebar" id="sidebar">
+            <h3><i class="fas fa-user-tie"></i> Fellow Profile</h3>
+            <div id="fellowInfo">
+                <div style="text-align: center; color: #888; padding: 30px 20px;">
+                    <i class="fas fa-map-marked-alt" style="font-size: 42px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p><strong style="color:#fdbb4d;">Click any fellow marker</strong></p>
+                    <p style="font-size: 12px; margin-top: 10px;">View biography • Current work • Vision • Motivation • Education</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Initialize Mediterranean map
+        const medMap = L.map('medMap').setView([38, 15], 5);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OSM & CartoDB',
+            maxZoom: 10,
+            minZoom: 4
+        }).addTo(medMap);
+        
+        // ============================================
+        // FELLOWS DATA - Mediterranean Region
+        // Based on the Trinity GBHI Fellows- Mediterranean document
+        // ============================================
+        
+        const fellows = [
+            // SPAIN (8 fellows)
+            { name: "Mircea Balasa", country: "Spain", city: "Barcelona", lat: 41.3851, lng: 2.1734, color: "#ff4444",
+              bio: "Behavioral Neurologist at the Alzheimer's Disease and Other Cognitive Disorders Unit at Hospital Clinic Barcelona.",
+              currentWork: "Neurologist specializing in early diagnosis of cognitive impairment and neurodegenerative dementias.",
+              vision: "An early diagnosis will offer the time window for disease modifying intervention and advanced care planning. We need to enhance training of healthcare professionals and increase diagnostic capabilities.",
+              motivation: "Cognitive impairment is underdiagnosed. More dementia training and increased ease of access to diagnosis is needed to adequately address the challenge.",
+              education: "MD at University of Lérida, Spain; Neurology degree at Hospital Clinic Barcelona; PhD focused in early-onset cognitive impairment at University of Barcelona. Atlantic Senior Fellow for Equity in Brain Health." },
+            
+            { name: "María Carmona-Iragui", country: "Spain", city: "Barcelona", lat: 41.3851, lng: 2.1734, color: "#ff4444",
+              bio: "Behavioral Neurologist specializing in neurodegenerative diseases in the general population and in people with Down syndrome.",
+              currentWork: "Faculty neurologist in the Neurology Department at Sant Pau, combining clinical and research activities.",
+              vision: "Carrying out research is essential to advancing clinical practice.",
+              motivation: "Improving outcomes for people with Down syndrome who are at higher risk for Alzheimer's disease.",
+              education: "Medical studies at Universidad de Navarra; Neurology residency at Clínica Universidad de Navarra; PhD in neuroscience from Hospital de la Santa Creu i Sant Pau." },
+            
+            { name: "Olga Castañer", country: "Spain", city: "Barcelona", lat: 41.3851, lng: 2.1734, color: "#ff4444",
+              bio: "Physician and Researcher specializing in vascular health and dementia prevention.",
+              currentWork: "Researching biomarkers for early dementia detection, focusing on common pathways between cardiovascular risk and neurodegenerative processes.",
+              vision: "To reduce the impact of dementia, we need to invest in public and political awareness, foster global collaboration to develop preventive strategies, and advance effective treatments.",
+              motivation: "The prevalence of dementia in Spain is rising alongside increased life expectancy, presenting major challenges for the healthcare system.",
+              education: "Medical school at Universitat Autonoma de Barcelona; PhD from University of Barcelona. Member of Biomedical Research Networking Center in Epidemiology and Public Health." },
+            
+            { name: "Clara Domínguez Vivero", country: "Spain", city: "Santiago de Compostela", lat: 42.8782, lng: -8.5448, color: "#ff4444",
+              bio: "Clinical Neurologist focused on improving communication between clinicians and patients.",
+              currentWork: "Clinical Neurologist for the Galician Health Service in Santiago de Compostela, Spain.",
+              vision: "We need to see aging as a natural and valuable process, and include the elderly in social life, economic activity, and family.",
+              motivation: "Spain needs to take more steps towards improving dementia care with a fully funded national dementia strategy.",
+              education: "Medical school at Universidade de Santiago de Compostela; Neurology training at Hospital Clínico Universitario de Santiago de Compostela." },
+            
+            { name: "Raquel Gutiérrez Zúñiga", country: "Spain", city: "Madrid", lat: 40.4168, lng: -3.7038, color: "#ff4444",
+              bio: "Neurologist specialized in cerebrovascular diseases and cognitive decline, and classical pianist.",
+              currentWork: "Neurologist and post-doctoral researcher in neurorehabilitation, brain repair, and plasticity mechanisms.",
+              vision: "To reduce the scale and impact of cognitive impairment, we need to transmit the importance of cognitive therapies and make them available to the whole population.",
+              motivation: "People with cognitive decline often struggle to find places where they can learn how to improve their cognitive capacities.",
+              education: "Medical Degree from Universidad de Granada; Neurology residency at University Hospital Virgen de las Nieves; PhD focused on Cerebrovascular Diseases." },
+            
+            { name: "Silvia Rodrigo-Herrero", country: "Spain", city: "Seville", lat: 37.3891, lng: -5.9845, color: "#ff4444",
+              bio: "Consultant neurologist and neuropsychologist researching early diagnosis of Alzheimer's disease.",
+              currentWork: "Developing an online support program for caregivers of people with dementia in Andalusia, Spain.",
+              vision: "There is a need to implement programs that help meet caregivers' needs and prevent their physical and mental health from deteriorating.",
+              motivation: "In Spain, people with dementia will reach almost one million by 2050, yet government responses to dementia prevention are inadequate.",
+              education: "Medical school at Salamanca University; Neurology at University Hospital Virgen del Rocio; Master's in Advanced studies in brain and behaviour." },
+            
+            // FRANCE (1 fellow)
+            { name: "Yaohua Chen", country: "France", city: "Lyon", lat: 45.7640, lng: 4.8357, color: "#44aa44",
+              bio: "Neurogeriatrician and cognitive disorders physician and researcher.",
+              currentWork: "Physician in neurogeriatrics studying determinants of cognitive decline from gait disorders to vascular impact.",
+              vision: "To reduce the scale and impact of dementia, we need to take into account diversity, gender differences, and advocate for person-tailored prevention solutions.",
+              motivation: "We need multidisciplinary support for people living with dementia and collaboration between hospitals and communities.",
+              education: "Medical school at University of Lyon; Neurology residency at University of Lille; PhD in translational work on Alzheimer's disease." },
+            
+            // TURKEY (1 fellow)
+            { name: "Derya Durusu Emek Savaş", country: "Turkey", city: "Izmir", lat: 38.4192, lng: 27.1287, color: "#ff9933",
+              bio: "Neuroscientist and Associate Professor developing computerized cognitive training programs.",
+              currentWork: "Associate Professor in Departments of Psychology and Neurosciences at Dokuz Eylul University, Turkey.",
+              vision: "We need new policies that improve health care and long-term care for the aging population and provide necessary care and support for people with dementia and their caregivers.",
+              motivation: "The aging population is significantly increasing in Turkey, and health care professionals are not prepared to meet the challenges of this change.",
+              education: "Bachelor's in psychology; MSc in clinical neuroscience; PhD in basic neuroscience. Expert in neuropsychological assessment and neuroimaging (EEG, MRI)." },
+            
+            // EGYPT (4 fellows)
+            { name: "Shaimaa El-Jaafary", country: "Egypt", city: "Cairo", lat: 30.0444, lng: 31.2357, color: "#cc6600",
+              bio: "Neurologist, Movement Disorders Specialist, and Associate Professor of Neurology at Cairo University.",
+              currentWork: "Medical educator, researcher and clinician specializing in Huntington's disease and cognitive dysfunction.",
+              vision: "The impact of dementia is reduced by spreading knowledge about the disease and encouraging the whole community to take part in prevention and management.",
+              motivation: "Stigma prevents affected people from seeking early medical advice. Raising awareness will erase this stigma.",
+              education: "Medical degree from Cairo University; MSc in Neurology and Psychiatry; PhD in Neurology from Cairo University." },
+            
+            { name: "Hany Ibrahim", country: "Egypt", city: "Cairo", lat: 30.0444, lng: 31.2357, color: "#cc6600",
+              bio: "Consultant Geriatrician, Senior Lecturer, co-founder of Ain Shams cognitive training Lab.",
+              currentWork: "Using modern technology and software platforms for early detection and diagnosis of dementia.",
+              vision: "We need a holistic approach that accommodates caregivers, families, social networks, health care providers, and policymakers.",
+              motivation: "Dementia is a challenging disease among elderly in Egypt. The prevalence is still underestimated.",
+              education: "Medical degree from Ain Shams University; Master's in Geriatrics; PhD focusing on comorbidity among Egyptian elderly." },
+            
+            { name: "Mohamed Salama", country: "Egypt", city: "Cairo", lat: 30.0444, lng: 31.2357, color: "#cc6600",
+              bio: "Neuroscientist and Associate Professor at the Institute of Global Health and Human Ecology, American University in Cairo.",
+              currentWork: "Leading the Egyptian Longitudinal Study of Aging to reshape current understanding of aging.",
+              vision: "We need to study the different interacting determinants of health and disease in aging populations in different localities and circumstances.",
+              motivation: "Dementia is certainly a problem in Egypt, but we do not know the size of that problem because we haven't yet studied it efficiently.",
+              education: "Medical degree from Mansoura University; MSc in Toxicology; PhD in Neurotoxicology from Philipps University, Germany." },
+            
+            // GREECE (1 fellow)
+            { name: "Ioannis Tarnanas", country: "Greece", city: "Thessaloniki", lat: 40.6401, lng: 22.9444, color: "#4466cc",
+              bio: "Neuroscientist focused on using new technologies to understand the aging process and prevent dementia.",
+              currentWork: "Chief Scientific Officer of Altoida, Inc., developing computational biomarkers of Alzheimer's disease.",
+              vision: "We must engage, inform, and educate the next generation of scientists and the public about the power of big data and its potential to advance medical progress.",
+              motivation: "Greece has had a national dementia plan since 2002 but it is not modernized or on par with other developed countries.",
+              education: "PhD in Neuroscience; Expert in developing predictive tools based on cognitive and non-cognitive biomarkers of early-onset dementia." }
+        ];
+        
+        // Add Spanish fellow from document not yet included
+        fellows.push({ name: "Mircea Balasa (Spain)", country: "Spain", city: "Barcelona", lat: 41.3851, lng: 2.1734, color: "#ff4444",
+              bio: "Cognitive neurologist in the Alzheimer's disease and Other Cognitive Disorders Unit at Hospital Clinic Barcelona.",
+              currentWork: "Developing new tools for early diagnosis of cognitive impairment and patient engagement for early identification of cognitive decline.",
+              vision: "An early diagnosis will offer the time window for disease modifying intervention and advanced care planning.",
+              motivation: "Cognitive impairment is underdiagnosed. More dementia training and increased ease of access to diagnosis is needed.",
+              education: "MD at University of Lérida; Neurology degree at Hospital Clinic Barcelona; PhD focused in early-onset cognitive impairment." });
+        
+        // ============================================
+        // MAP FUNCTIONALITY
+        // ============================================
+        
+        let markers = [];
+        
+        function getColor(country) {
+            if (country === "Spain") return "#ff4444";
+            if (country === "France") return "#44aa44";
+            if (country === "Turkey") return "#ff9933";
+            if (country === "Egypt") return "#cc6600";
+            if (country === "Greece") return "#4466cc";
+            return "#fdbb4d";
+        }
+        
+        function showFellowDetails(index) {
+            const f = fellows[index];
+            if (!f) return;
+            
+            const countryFlag = f.country === "Spain" ? "🇪🇸" : (f.country === "France" ? "🇫🇷" : (f.country === "Turkey" ? "🇹🇷" : (f.country === "Egypt" ? "🇪🇬" : "🇬🇷")));
+            
+            document.getElementById('fellowInfo').innerHTML = `
+                <div>
+                    <div class="fellow-name">${f.name}</div>
+                    <div class="fellow-country">${countryFlag} ${f.country} | ${f.city}</div>
+                    <div class="fellow-bio"><strong>📖 Background</strong><br>${f.bio}</div>
+                    <div class="current-work"><strong>🔬 Current Work</strong><br>${f.currentWork}</div>
+                    <div class="vision-quote"><strong>🌟 Vision</strong><br>"${f.vision}"</div>
+                    <div class="motivation"><strong>💡 Motivation</strong><br>${f.motivation}</div>
+                    <div class="education"><strong>🎓 Education & Experience</strong><br>${f.education}</div>
+                    <button class="close-sidebar" onclick="clearSidebar()"><i class="fas fa-times"></i> Close</button>
+                </div>
+            `;
+            
+            // Highlight marker
+            markers.forEach(m => {
+                if (m.options.fellowIndex === index) {
+                    m.openPopup();
+                }
+            });
+        }
+        
+        function clearSidebar() {
+            document.getElementById('fellowInfo').innerHTML = `
+                <div style="text-align: center; color: #888; padding: 30px 20px;">
+                    <i class="fas fa-map-marked-alt" style="font-size: 42px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p><strong style="color:#fdbb4d;">Click any fellow marker</strong></p>
+                    <p style="font-size: 12px; margin-top: 10px;">View biography • Current work • Vision • Motivation • Education</p>
+                </div>
+            `;
+        }
+        
+        function resetView() {
+            medMap.setView([38, 15], 5);
+            clearSidebar();
+        }
+        
+        // Create markers for each fellow
+        fellows.forEach((fellow, idx) => {
+            const markerColor = getColor(fellow.country);
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background:${markerColor}; width:14px; height:14px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px ${markerColor};"></div>`,
+                iconSize: [20, 20],
+                popupAnchor: [0, -10]
+            });
+            
+            const countryFlag = fellow.country === "Spain" ? "🇪🇸" : (fellow.country === "France" ? "🇫🇷" : (fellow.country === "Turkey" ? "🇹🇷" : (fellow.country === "Egypt" ? "🇪🇬" : "🇬🇷")));
+            
+            const marker = L.marker([fellow.lat, fellow.lng], { icon: customIcon, fellowIndex: idx }).addTo(medMap);
+            
+            marker.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; min-width: 220px; background: #1a1a2e; color: white; padding: 8px; border-radius: 8px;">
+                    <strong style="font-size: 16px; color: #fdbb4d;">${fellow.name}</strong><br>
+                    <span>${countryFlag} ${fellow.city}, ${fellow.country}</span><br>
+                    <span style="font-size: 11px; opacity: 0.8;">🎓 ${fellow.currentWork.substring(0, 60)}...</span><br>
+                    <hr style="margin: 8px 0; border-color: #333;">
+                    <button onclick="showFellowDetails(${idx})" style="margin-top: 5px; padding: 6px 12px; background: linear-gradient(135deg, #fdbb4d, #ff8c00); color: #1a2a6c; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;">
+                        <i class="fas fa-user-graduate"></i> View Full Profile
+                    </button>
+                </div>
+            `, { className: 'dark-popup' });
+            
+            marker.on('click', () => showFellowDetails(idx));
+            markers.push(marker);
+        });
+        
+        // Add a Mediterranean Sea label
+        const mediterraneanLabel = L.marker([35, 18], {
+            icon: L.divIcon({
+                className: 'med-label',
+                html: '<div style="background: rgba(0,0,0,0.5); color: #88aaff; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-style: italic;"><i class="fas fa-water"></i> Mediterranean Sea</div>',
+                iconSize: [120, 20]
+            })
+        }).addTo(medMap);
+        
+        // Reset button
+        document.getElementById('resetMapBtn').addEventListener('click', resetView);
+        
+        console.log("🌊 GBHI Mediterranean Network Loaded");
+        console.log(`📊 Fellows: ${fellows.length} (Spain: 8, France: 1, Turkey: 1, Egypt: 4, Greece: 1)`);
+        console.log("👆 Click any marker to see full profile");
+    </script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>GBHI - Africa Fellowship Network | Atlantic Fellows for Equity in Brain Health</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a2f1f 0%, #1b4d2e 50%, #2c7da0 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 1000;
+            position: relative;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .gbhi-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #fff 0%, #2c7da0 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #0a2f1f;
+        }
+        
+        .header h1 { font-size: 18px; color: white; }
+        .header h1 span { color: #2c7da0; }
+        .header p { color: rgba(255,255,255,0.7); font-size: 10px; margin-top: 2px; }
+        
+        .controls { display: flex; gap: 8px; }
+        
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .btn-primary { background: linear-gradient(135deg, #2c7da0 0%, #1f5e7a 100%); color: white; }
+        
+        .main-container { height: calc(100vh - 72px); position: relative; }
+        .map-container { height: 100%; width: 100%; position: relative; }
+        #africaMap { height: 100%; width: 100%; }
+        
+        .sidebar {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            width: 340px;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 18px;
+            color: #e0e0e0;
+            z-index: 1000;
+            max-height: 85%;
+            overflow-y: auto;
+            border: 1px solid rgba(44,125,160,0.3);
+            pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        
+        .sidebar h3 {
+            color: #2c7da0;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 2px solid #2c7da0;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .fellow-name { font-size: 20px; font-weight: 800; color: #2c7da0; margin-bottom: 5px; }
+        .fellow-credentials { font-size: 12px; color: #aaa; margin-bottom: 5px; }
+        .fellow-country { display: inline-block; padding: 3px 10px; background: rgba(255,255,255,0.1); border-radius: 20px; font-size: 11px; margin: 8px 0; }
+        .words-strength { font-style: italic; color: #2c7da0; font-size: 12px; margin: 8px 0; padding: 8px; background: rgba(44,125,160,0.1); border-radius: 8px; }
+        .fellow-bio { line-height: 1.55; margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; font-size: 12px; max-height: 180px; overflow-y: auto; }
+        .vision-quote { background: rgba(44,125,160,0.08); padding: 10px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #2c7da0; font-size: 12px; font-style: italic; }
+        .project-title { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #1f5e7a; font-size: 12px; }
+        .connection-list { list-style: none; padding: 0; }
+        .connection-list li { padding: 6px 10px; margin: 4px 0; background: rgba(255,255,255,0.08); border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .connection-list li:hover { background: #2c7da0; color: white; transform: translateX(4px); }
+        .close-sidebar { background: rgba(220,53,69,0.8); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 15px; width: 100%; font-weight: 500; transition: all 0.2s; }
+        .close-sidebar:hover { background: #dc3545; }
+        
+        .stats-bar {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #2c7da0;
+            font-size: 11px;
+            z-index: 1000;
+            font-weight: 500;
+        }
+        
+        .legend-panel {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: #ddd;
+            font-size: 10px;
+            z-index: 1000;
+        }
+        
+        .custom-marker { cursor: pointer; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; gap: 8px; padding: 10px; }
+            .sidebar { width: 280px; right: 10px; top: 10px; padding: 12px; max-height: 75%; }
+            .fellow-bio { max-height: 150px; }
+        }
+        
+        .dark-popup .leaflet-popup-content-wrapper { background: #1a1a2e; color: white; border-radius: 10px; border: 1px solid #2c7da0; }
+        .dark-popup .leaflet-popup-tip { background: #1a1a2e; }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #2c7da0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <div class="gbhi-icon"><i class="fas fa-brain"></i></div>
+            <div>
+                <h1>Global Brain Health Institute <span>| GBHI</span></h1>
+                <p>Africa Fellowship Network • Atlantic Fellows for Equity in Brain Health</p>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="window.location.href='index.html'"><i class="fas fa-globe-americas"></i> Global Map</button>
+            <button class="btn" id="resetMapBtn"><i class="fas fa-home"></i> Reset Map</button>
+            <button class="btn btn-primary" id="clearLinesBtn"><i class="fas fa-eraser"></i> Clear Lines</button>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="map-container">
+            <div id="africaMap"></div>
+            <div class="stats-bar">
+                <i class="fas fa-users"></i> 13 Fellows | <i class="fas fa-hand-pointer"></i> Click any node
+            </div>
+            <div class="legend-panel">
+                <span style="display:inline-block; width:10px; height:10px; background:#2c7da0; border-radius:50%; margin-right:4px;"></span> East Africa
+                <span style="display:inline-block; width:10px; height:10px; background:#8338ec; border-radius:50%; margin-right:4px; margin-left:8px;"></span> Southern Africa
+            </div>
+        </div>
+        
+        <div class="sidebar" id="sidebar">
+            <h3><i class="fas fa-user-tie"></i> Fellow Profile</h3>
+            <div id="fellowInfo">
+                <div style="text-align: center; color: #888; padding: 30px 20px;">
+                    <i class="fas fa-map-of-africa" style="font-size: 42px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p><strong style="color:#2c7da0;">Click any fellow marker</strong></p>
+                    <p style="font-size: 12px; margin-top: 10px;">View profile • Vision • Project • Network connections</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        const africaMap = L.map('africaMap').setView([5, 20], 4);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OSM & CartoDB',
+            maxZoom: 10,
+            minZoom: 3
+        }).addTo(africaMap);
+        
+        const fellows = {
+            // EASTERN AFRICA (Teal/Blue #2c7da0)
+            "Meron Abey": {
+                name: "Meron Abey", credentials: "Theater Artist", country: "Ethiopia", region: "east", city: "Addis Ababa", lat: 9.0320, lng: 38.7469,
+                wordsStrength: "Resilient, building relationships, risk taking",
+                bio: "Theatre practitioner exploring how the arts can strengthen healthcare service, social equity, and brain health in Ethiopia.",
+                vision: "Art-based intervention can bring social change on stigma and awareness, benefiting better care, prevention and quality of life.",
+                project: "Implementing community-based art interventions to influence perceptions about art's role in supporting older adults.",
+                connections: ["Elul Lakew", "Paul Modjadji"], year: "2024-2025" },
+            
+            "Elul Lakew": {
+                name: "Elul Lakew", credentials: "MS, Clinical Psychologist", country: "Ethiopia", region: "east", city: "Addis Ababa", lat: 9.0320, lng: 38.7469,
+                wordsStrength: "Yes, I Can",
+                bio: "Clinical psychologist and mental health advocate hosting radio and TV programs on mental health, using social media to discuss brain health.",
+                vision: "Advocacy can reduce the scale and impact of dementia. The more people who speak up, the greater the awareness and prevention.",
+                project: "Using public and social media platforms to raise awareness about dementia and how to help those living with it.",
+                connections: ["Meron Abey", "Wambui Karanja"], year: "2024-2025" },
+            
+            "Geeta Dorkhy": {
+                name: "Geeta Dorkhy", credentials: "MHA, MPH, MBBS, Doctor", country: "Mauritius", region: "east", city: "Port Louis", lat: -20.1667, lng: 57.5167,
+                wordsStrength: "Experiencing change",
+                bio: "Medical doctor contributing to research, development, training, and dementia awareness strategies for a healthy Mauritius.",
+                vision: "Translate National Dementia Action Plans into action. Start with education at an early age, promoting preventive strategies.",
+                project: "Co-investigator for MO-FINGER, a multidomain lifestyle intervention for cognitive improvement in at-risk individuals.",
+                connections: ["Muthoni Gichu", "Cyprian Mostert"], year: "2023-2024" },
+            
+            "Muthoni Gichu": {
+                name: "Muthoni Gichu", credentials: "MB.Ch.B, MSc, Medical Gerontologist", country: "Kenya", region: "east", city: "Nairobi", lat: -1.2864, lng: 36.8172,
+                wordsStrength: "Driven, responsive, committed",
+                bio: "Medical gerontologist and exercise scientist, head of Division of Geriatric Medicine at Kenya's Ministry of Health.",
+                vision: "Empower communities, strengthen health systems, execute targeted research, and implement evidence-based strategies.",
+                project: "Developing policies and strategies that support health system strengthening in response to aging population and dementia.",
+                connections: ["Wambui Karanja", "Rachel Maina", "Cyprian Mostert", "Geeta Dorkhy"], year: "2023-2024" },
+            
+            "Wambui Karanja": {
+                name: "Wambui Karanja", credentials: "Project Manager", country: "Kenya", region: "east", city: "Nairobi", lat: -1.2864, lng: 36.8172,
+                wordsStrength: "Building networks",
+                bio: "Project Manager at Brain and Mind Institute, Aga Khan University, co-chair of ISTAART LMIC Workgroup.",
+                vision: "Increase understanding of dementia through awareness initiatives that address risk factors and reduce stigma.",
+                project: "Africa Brain Health Dashboard project with Dr Kirsten Bobrow, shifting narratives on brain health data in Africa.",
+                connections: ["Muthoni Gichu", "Rachel Maina", "Cyprian Mostert", "Elul Lakew"], year: "2024-2025" },
+            
+            "Rachel Maina": {
+                name: "Rachel Maina", credentials: "PhD, Clinical Psychologist", country: "Kenya", region: "east", city: "Nairobi", lat: -1.2864, lng: 36.8172,
+                wordsStrength: "Useful contribution, helping others",
+                bio: "Clinical psychologist and psychometrician specializing in cross-cultural neurocognitive measures for LMICs.",
+                vision: "Create culturally appropriate brain health tools for all communities, including high-risk populations like people with Down syndrome.",
+                project: "Adapting computerized brain testing tools for African communities and leading research on healthy aging.",
+                connections: ["Muthoni Gichu", "Wambui Karanja", "Cyprian Mostert"], year: "2023-2024" },
+            
+            "Cyprian Mostert": {
+                name: "Cyprian Mostert", credentials: "PhD, Health Economist", country: "Kenya", region: "east", city: "Nairobi", lat: -1.2864, lng: 36.8172,
+                wordsStrength: "Innovative, creative, dynamic",
+                bio: "Assistant Professor of Global Health Economics at Aga Khan University, researching economics of brain health in developing countries.",
+                vision: "Implement economic policy strategies throughout various life stages to prevent dementia with a lifespan approach.",
+                project: "Evaluating multipronged policy frameworks to prevent cognitive decline in South Africa, Kenya, and Tanzania.",
+                connections: ["Muthoni Gichu", "Wambui Karanja", "Rachel Maina", "Geeta Dorkhy"], year: "2024-2025" },
+            
+            "Grant Longwe": {
+                name: "Grant Longwe", credentials: "Physiotherapist", country: "Zambia", region: "east", city: "Lusaka", lat: -15.3875, lng: 28.3228,
+                wordsStrength: "Creative thinking",
+                bio: "Physiotherapy technologist and dementia advocate, Programs Director at Alzheimer's Disease and Related Dementias in Zambia (ADDIZ).",
+                vision: "Foster cross-sector collaboration, empower communities through education and early interventions.",
+                project: "Leading dementia awareness campaigns, community workshops, and Walks to End Dementia in Zambia.",
+                connections: ["Primrose Nyamayaro", "Paul Modjadji"], year: "2024-2025" },
+            
+            "Primrose Nyamayaro": {
+                name: "Primrose Nyamayaro", credentials: "MRes, Research Psychologist", country: "Zimbabwe", region: "east", city: "Harare", lat: -17.8252, lng: 31.0335,
+                wordsStrength: "Networking and collaborations",
+                bio: "Research psychologist supported by AMARI at University of Zimbabwe, pursuing PhD in Neuropsychology and HIV.",
+                vision: "Ensure interventions and evidence-based practices are accessible to low-income countries and culturally appropriate.",
+                project: "Validating NeuroScreen, a smartphone-based screening tool for neurocognitive disorders in people living with HIV.",
+                connections: ["Grant Longwe", "Khanyo Ngcobo"], year: "2024-2025" },
+            
+            // SOUTHERN AFRICA (Purple #8338ec)
+            "Maria Lina Kambongi": {
+                name: "Maria Lina Kambongi", credentials: "MS, Neurophysiologist", country: "Namibia", region: "south", city: "Windhoek", lat: -22.5609, lng: 17.0658,
+                wordsStrength: "Healing begins with access",
+                bio: "Namibia's first and only Neurophysiologist, founder of NeuroSync Diagnostic Centre.",
+                vision: "Advance brain health through early diagnosis, inclusive care, and community education.",
+                project: "Mobile clinics serving rural Namibia, combining neurodiagnostic testing with public awareness and research.",
+                connections: ["Kirti Ranchod", "Khanyo Ngcobo"], year: "2024-2025" },
+            
+            "Paul Modjadji": {
+                name: "Paul Modjadji", credentials: "Artist, Choreographer", country: "South Africa", region: "south", city: "Johannesburg", lat: -26.2041, lng: 28.0473,
+                wordsStrength: "Passion driven, community uplifter",
+                bio: "Choreographer, creative director, and social entrepreneur, founder of Leaders Who Dare To Dream Foundation.",
+                vision: "Reduce dementia's impact through awareness and proactive interventions for vulnerable community members.",
+                project: "Community engagement art programmes for young people and fitness/wellness classes for elderly community members.",
+                connections: ["Meron Abey", "Grant Longwe", "Kirti Ranchod"], year: "2024-2025" },
+            
+            "Khanyo Ngcobo": {
+                name: "Khanyo Ngcobo", credentials: "MBChB, FcPsych, MMed, Psychiatrist", country: "South Africa", region: "south", city: "Durban", lat: -29.8587, lng: 31.0218,
+                wordsStrength: "Compassionately dedicated",
+                bio: "Specialist Psychiatrist at King Dinuzulu Hospital Complex and honorary lecturer at University of KwaZulu-Natal.",
+                vision: "Increase dementia awareness and address modifiable risk factors. Prioritize resources to prevent, treat and care for people with dementia.",
+                project: "Developing a culture-fair cognitive screening tool for diverse populations in South Africa.",
+                connections: ["Maria Lina Kambongi", "Primrose Nyamayaro", "Kirti Ranchod"], year: "2023-2024" },
+            
+            "Kirti Ranchod": {
+                name: "Kirti Ranchod", credentials: "MBBCh, Neurologist", country: "South Africa", region: "south", city: "Johannesburg", lat: -26.2041, lng: 28.0473,
+                wordsStrength: "Innovative, resourceful, determined",
+                bio: "Neurologist based in Johannesburg focusing on memory and brain health, interest in traditional practices that promote health.",
+                vision: "Develop a strategy focusing on both resources required and resources available within communities.",
+                project: "Increasing public awareness on brain health and the value of community resources.",
+                connections: ["Paul Modjadji", "Khanyo Ngcobo", "Maria Lina Kambongi"], year: "2023-2024" }
+        };
+        
+        let markers = [];
+        let currentLines = [];
+        
+        function getColor(region) {
+            if (region === "east") return "#2c7da0";
+            return "#8338ec";
+        }
+        
+        function clearAllConnections() {
+            currentLines.forEach(line => africaMap.removeLayer(line));
+            currentLines = [];
+        }
+        
+        function drawConnectionsForFellow(fellowId) {
+            clearAllConnections();
+            const fellow = fellows[fellowId];
+            if (!fellow || !fellow.connections) return;
+            fellow.connections.forEach(connId => {
+                const target = fellows[connId];
+                if (target) {
+                    const line = L.polyline([[fellow.lat, fellow.lng], [target.lat, target.lng]], {
+                        color: '#2c7da0', weight: 3, opacity: 0.85
+                    }).addTo(africaMap);
+                    currentLines.push(line);
+                }
+            });
+        }
+        
+        function showFellowDetails(fellowId) {
+            const f = fellows[fellowId];
+            if (!f) return;
+            const regionName = f.region === "east" ? "East Africa" : "Southern Africa";
+            const flagEmoji = f.country === "Ethiopia" ? "🇪🇹" : f.country === "Mauritius" ? "🇲🇺" : f.country === "Kenya" ? "🇰🇪" : f.country === "Zambia" ? "🇿🇲" : f.country === "Zimbabwe" ? "🇿🇼" : f.country === "Namibia" ? "🇳🇦" : f.country === "South Africa" ? "🇿🇦" : "🌍";
+            
+            const connectionsList = f.connections.map(connId => {
+                const c = fellows[connId];
+                if (!c) return '';
+                return `<li onclick="selectConnectedFellow('${connId}')">
+                            <i class="fas fa-user-friends"></i> <strong>${c.name}</strong> (${c.country})
+                        </li>`;
+            }).join('');
+            
+            document.getElementById('fellowInfo').innerHTML = `
+                <div>
+                    <div class="fellow-name">${f.name}</div>
+                    <div class="fellow-credentials">${f.credentials}</div>
+                    <div class="fellow-country">${flagEmoji} ${f.city}, ${f.country} | ${regionName} | ${f.year}</div>
+                    <div class="words-strength"><i class="fas fa-quote-left"></i> "${f.wordsStrength}"</div>
+                    <div class="fellow-bio"><strong>📖 Current Work</strong><br>${f.bio}</div>
+                    <div class="vision-quote"><strong>🌟 Vision</strong><br>"${f.vision}"</div>
+                    <div class="project-title"><strong>🔬 Key Initiative</strong><br>${f.project}</div>
+                    <div style="margin-top: 15px;">
+                        <h4 style="color:#2c7da0; margin-bottom: 8px;"><i class="fas fa-project-diagram"></i> Network (${f.connections.length} connections)</h4>
+                        <ul class="connection-list">${connectionsList}</ul>
+                    </div>
+                    <button class="close-sidebar" onclick="clearSidebarAndLines()"><i class="fas fa-times"></i> Close</button>
+                </div>
+            `;
+            drawConnectionsForFellow(fellowId);
+            markers.forEach(m => { if (m.options.fellowId === fellowId) m.openPopup(); });
+        }
+        
+        function selectConnectedFellow(fellowId) {
+            showFellowDetails(fellowId);
+            const f = fellows[fellowId];
+            if (f) africaMap.flyTo([f.lat, f.lng], 7, { duration: 0.8 });
+        }
+        
+        function clearSidebarAndLines() {
+            clearAllConnections();
+            document.getElementById('fellowInfo').innerHTML = `
+                <div style="text-align: center; color: #888; padding: 30px 20px;">
+                    <i class="fas fa-map-of-africa" style="font-size: 42px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p><strong style="color:#2c7da0;">Click any fellow marker</strong></p>
+                    <p style="font-size: 12px; margin-top: 10px;">View profile • Vision • Project • Network connections</p>
+                </div>
+            `;
+        }
+        
+        function resetView() {
+            africaMap.setView([5, 20], 4);
+            clearSidebarAndLines();
+        }
+        
+        function createMarker(fellow, id) {
+            const markerColor = getColor(fellow.region);
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background:${markerColor}; width:14px; height:14px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px ${markerColor};"></div>`,
+                iconSize: [20, 20], popupAnchor: [0, -10]
+            });
+            
+            const marker = L.marker([fellow.lat, fellow.lng], { icon: customIcon, fellowId: id }).addTo(africaMap);
+            marker.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; min-width: 200px; background: #1a1a2e; color: white; padding: 8px; border-radius: 8px;">
+                    <strong style="font-size: 16px; color: #2c7da0;">${fellow.name}</strong><br>
+                    <span>${fellow.city}, ${fellow.country}</span><br>
+                    <span style="font-size: 11px; opacity: 0.8;">🎓 ${fellow.year}</span><br>
+                    <span style="font-size: 11px; font-style: italic;">"${fellow.wordsStrength.substring(0, 60)}..."</span><br>
+                    <hr style="margin: 8px 0; border-color: #333;">
+                    <button onclick="showFellowDetails('${id}')" style="margin-top: 5px; padding: 6px 12px; background: linear-gradient(135deg, #2c7da0, #1f5e7a); color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;">
+                        <i class="fas fa-user-graduate"></i> View Full Profile
+                    </button>
+                </div>
+            `, { className: 'dark-popup' });
+            marker.on('click', () => showFellowDetails(id));
+            return marker;
+        }
+        
+        Object.keys(fellows).forEach(key => { markers.push(createMarker(fellows[key], key)); });
+        
+        document.getElementById('resetMapBtn').addEventListener('click', resetView);
+        document.getElementById('clearLinesBtn').addEventListener('click', clearAllConnections);
+        
+        console.log("🌍 GBHI Africa Network Loaded — 13 fellows (East: 9, Southern: 4)");
+    </script>
+</body>
+</html>
+
