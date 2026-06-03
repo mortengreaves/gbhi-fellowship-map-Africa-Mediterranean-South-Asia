@@ -31,7 +31,6 @@
             flex-wrap: wrap;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             z-index: 1000;
-            position: relative;
         }
         
         .logo-section { display: flex; align-items: center; gap: 12px; }
@@ -48,75 +47,39 @@
         .header h1 { font-size: 18px; color: white; }
         .header h1 span { color: #fdbb4d; }
         .header p { color: rgba(255,255,255,0.7); font-size: 10px; margin-top: 2px; }
-        .controls { display: flex; gap: 8px; }
-        .btn {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            background: rgba(255,255,255,0.15);
-            color: white;
-            transition: all 0.2s;
-        }
-        .btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
         
-        .main-container { height: calc(100vh - 72px); position: relative; }
-        .map-container { height: 100%; width: 100%; position: relative; background: #0a1a2a; }
-        #worldMap { height: 100%; width: 100%; background: #0a1a2a; min-height: 500px; }
-        
-        /* ========== CLICKABLE REGION BUTTONS ON MAP ========== */
-        .region-button {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 2px solid #fdbb4d;
+        /* SIMPLE NAVIGATION BUTTONS - THESE WILL WORK */
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 16px;
             border-radius: 40px;
-            padding: 10px 24px;
+            backdrop-filter: blur(8px);
+        }
+        .nav-btn {
+            padding: 8px 20px;
+            border: 2px solid #fdbb4d;
+            border-radius: 30px;
+            background: rgba(0,0,0,0.8);
             color: #fdbb4d;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            z-index: 1000;
-            text-align: center;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
         }
-        
-        .region-button:hover {
+        .nav-btn:hover {
             background: #fdbb4d;
             color: #1a2a6c;
             transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(253,187,77,0.6);
         }
         
-        .region-button i {
-            margin-right: 8px;
-        }
+        .main-container { height: calc(100vh - 72px); position: relative; }
+        .map-container { height: 100%; width: 100%; position: relative; background: #0a1a2a; }
+        #worldMap { height: 100%; width: 100%; background: #0a1a2a; }
         
-        /* Position each button over its region */
-        #southAsiaBtn {
-            top: 48%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        #mediterraneanBtn {
-            top: 42%;
-            left: 45%;
-            transform: translate(-50%, -50%);
-        }
-        
-        #africaBtn {
-            top: 55%;
-            left: 48%;
-            transform: translate(-50%, -50%);
-        }
-        
-        /* Legend panel */
         .legend-panel {
             position: absolute;
             bottom: 15px;
@@ -129,11 +92,7 @@
             font-size: 11px;
             z-index: 1000;
             border-left: 3px solid #fdbb4d;
-            min-width: 210px;
         }
-        .legend-panel h4 { color: #fdbb4d; margin-bottom: 8px; font-size: 12px; }
-        .legend-circle { display: inline-block; border-radius: 50%; margin-right: 6px; }
-        
         .stats-badge {
             position: absolute;
             bottom: 15px;
@@ -145,49 +104,17 @@
             font-size: 10px;
             z-index: 1000;
         }
-        
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 2000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-        .loading-overlay.active { opacity: 1; visibility: visible; }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 3px solid rgba(253,187,77,0.3);
-            border-top-color: #fdbb4d;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-overlay p { color: #fdbb4d; margin-top: 15px; font-size: 14px; }
-        
         .bubble-popup .leaflet-popup-content-wrapper {
             background: #1a1a2e;
             color: white;
             border-radius: 10px;
             border: 1px solid #fdbb4d;
         }
-        .bubble-popup .leaflet-popup-tip { background: #1a1a2e; }
         
         @media (max-width: 768px) {
-            .header { flex-direction: column; text-align: center; gap: 8px; padding: 10px; }
-            .legend-panel { bottom: 10px; left: 10px; padding: 8px; min-width: 180px; }
-            .region-button { padding: 6px 12px; font-size: 10px; white-space: nowrap; }
-            #southAsiaBtn { top: 50%; left: 50%; }
-            #mediterraneanBtn { top: 42%; left: 42%; }
-            #africaBtn { top: 58%; left: 48%; }
+            .header { flex-direction: column; gap: 10px; }
+            .nav-buttons { justify-content: center; }
+            .nav-btn { padding: 5px 12px; font-size: 11px; }
         }
     </style>
 </head>
@@ -197,11 +124,13 @@
             <div class="gbhi-logo"><i class="fas fa-brain"></i></div>
             <div>
                 <h1>Global Brain Health Institute <span>| GBHI</span></h1>
-                <p>Global Fellowship Networks • Click a region button to explore</p>
+                <p>Global Fellowship Networks • Click a button to explore</p>
             </div>
         </div>
-        <div class="controls">
-            <button class="btn" id="resetBtn"><i class="fas fa-home"></i> Reset Map</button>
+        <div class="nav-buttons">
+            <a class="nav-btn" href="south-asia.html"><i class="fas fa-map-marker-alt"></i> 🌏 South Asia</a>
+            <a class="nav-btn" href="mediterranean.html"><i class="fas fa-map-marker-alt"></i> 🌊 Mediterranean</a>
+            <a class="nav-btn" href="africa.html"><i class="fas fa-map-marker-alt"></i> 🌍 Africa</a>
         </div>
     </div>
     
@@ -209,32 +138,16 @@
         <div class="map-container">
             <div id="worldMap"></div>
             
-            <!-- ========== CLICKABLE REGION BUTTONS ========== -->
-            <div id="southAsiaBtn" class="region-button">
-                <i class="fas fa-map-marker-alt"></i> 🌏 SOUTH ASIA NETWORK
-            </div>
-            
-            <div id="mediterraneanBtn" class="region-button">
-                <i class="fas fa-map-marker-alt"></i> 🌊 MEDITERRANEAN NETWORK
-            </div>
-            
-            <div id="africaBtn" class="region-button">
-                <i class="fas fa-map-marker-alt"></i> 🌍 AFRICA NETWORK
-            </div>
-            
             <div class="legend-panel">
                 <h4><i class="fas fa-chart-line"></i> Policy Document Volume</h4>
-                <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap;">
-                    <div><span class="legend-circle" style="background:#fdbb4d; width:8px; height:8px;"></span> &lt;10</div>
-                    <div><span class="legend-circle" style="background:#fdbb4d; width:14px; height:14px;"></span> 10-50</div>
-                    <div><span class="legend-circle" style="background:#fdbb4d; width:22px; height:22px;"></span> 50-150</div>
-                    <div><span class="legend-circle" style="background:#fdbb4d; width:35px; height:35px;"></span> 150-300</div>
-                    <div><span class="legend-circle" style="background:#fdbb4d; width:48px; height:48px;"></span> 300+</div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                    <div><span style="display:inline-block; width:8px; height:8px; background:#fdbb4d; border-radius:50%;"></span> &lt;10</div>
+                    <div><span style="display:inline-block; width:14px; height:14px; background:#fdbb4d; border-radius:50%;"></span> 10-50</div>
+                    <div><span style="display:inline-block; width:22px; height:22px; background:#fdbb4d; border-radius:50%;"></span> 50-150</div>
+                    <div><span style="display:inline-block; width:35px; height:35px; background:#fdbb4d; border-radius:50%;"></span> 150-300</div>
+                    <div><span style="display:inline-block; width:48px; height:48px; background:#fdbb4d; border-radius:50%;"></span> 300+</div>
                 </div>
-                <hr style="margin: 8px 0; border-color: #333;">
-                <p style="margin-top: 6px; font-size: 10px;">
-                    <i class="fas fa-hand-pointer"></i> <strong style="color:#fdbb4d;">Click the buttons above</strong> to explore fellowship networks
-                </p>
+                <p style="margin-top: 8px;"><i class="fas fa-hand-pointer"></i> Click the buttons above to explore fellowship networks</p>
             </div>
             
             <div class="stats-badge">
@@ -243,15 +156,7 @@
         </div>
     </div>
     
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <p><i class="fas fa-map-marked-alt"></i> Loading Fellowship Network...</p>
-    </div>
-    
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script>
-        // Initialize world map
         window.addEventListener('load', function() {
             var worldMap = L.map('worldMap').setView([20, 0], 2);
             
@@ -261,37 +166,6 @@
                 minZoom: 2
             }).addTo(worldMap);
             
-            // Navigation function
-            function navigateTo(page) {
-                var overlay = document.getElementById('loadingOverlay');
-                overlay.classList.add('active');
-                setTimeout(function() {
-                    window.location.href = page;
-                }, 500);
-            }
-            
-            // ========== ATTACH CLICK HANDLERS TO BUTTONS ==========
-            document.getElementById('southAsiaBtn').addEventListener('click', function() {
-                console.log("South Asia button clicked - navigating to south-asia.html");
-                navigateTo('south-asia.html');
-            });
-            
-            document.getElementById('mediterraneanBtn').addEventListener('click', function() {
-                console.log("Mediterranean button clicked - navigating to mediterranean.html");
-                navigateTo('mediterranean.html');
-            });
-            
-            document.getElementById('africaBtn').addEventListener('click', function() {
-                console.log("Africa button clicked - navigating to africa.html");
-                navigateTo('africa.html');
-            });
-            
-            // Reset button
-            document.getElementById('resetBtn').addEventListener('click', function() {
-                worldMap.setView([20, 0], 2);
-            });
-            
-            // Add some decorative bubbles (non-clickable, just for visual)
             function getRadius(docs) {
                 if (docs >= 300) return 48;
                 if (docs >= 150) return 38;
@@ -301,36 +175,33 @@
                 return 8;
             }
             
-            var bubbles = [
-                { lat: 37.0902, lng: -95.7129, country: "USA", docs: 516 },
-                { lat: 56.1304, lng: -106.3468, country: "Canada", docs: 56 },
-                { lat: 55.3781, lng: -3.4360, country: "UK", docs: 262 },
-                { lat: 51.1657, lng: 10.4515, country: "Germany", docs: 92 },
-                { lat: 40.4637, lng: -3.7492, country: "Spain", docs: 71 },
-                { lat: 46.2276, lng: 2.2137, country: "France", docs: 41 },
-                { lat: 46.8182, lng: 8.2275, country: "Switzerland", docs: 28 },
-                { lat: 60.1282, lng: 18.6435, country: "Sweden", docs: 27 },
-                { lat: 35.8617, lng: 104.1954, country: "China", docs: 100 },
-                { lat: 25.2744, lng: 133.7751, country: "Australia", docs: 92 },
-                { lat: 20.5937, lng: 78.9629, country: "India", docs: 15 },
-                { lat: -14.2350, lng: -51.9253, country: "Brazil", docs: 20 },
-                { lat: -1.2864, lng: 36.8172, country: "Kenya", docs: 5 }
+            var countries = [
+                { lat: 37.0902, lng: -95.7129, name: "USA", docs: 516 },
+                { lat: 56.1304, lng: -106.3468, name: "Canada", docs: 56 },
+                { lat: 55.3781, lng: -3.4360, name: "UK", docs: 262 },
+                { lat: 51.1657, lng: 10.4515, name: "Germany", docs: 92 },
+                { lat: 40.4637, lng: -3.7492, name: "Spain", docs: 71 },
+                { lat: 46.2276, lng: 2.2137, name: "France", docs: 41 },
+                { lat: 35.8617, lng: 104.1954, name: "China", docs: 100 },
+                { lat: 25.2744, lng: 133.7751, name: "Australia", docs: 92 },
+                { lat: 20.5937, lng: 78.9629, name: "India", docs: 15 },
+                { lat: -14.2350, lng: -51.9253, name: "Brazil", docs: 20 },
+                { lat: -1.2864, lng: 36.8172, name: "Kenya", docs: 5 },
+                { lat: -30.5595, lng: 22.9375, name: "South Africa", docs: 8 }
             ];
             
-            for (var i = 0; i < bubbles.length; i++) {
-                var item = bubbles[i];
-                var radius = getRadius(item.docs);
-                L.circleMarker([item.lat, item.lng], {
-                    radius: radius,
+            for (var i = 0; i < countries.length; i++) {
+                var c = countries[i];
+                L.circleMarker([c.lat, c.lng], {
+                    radius: getRadius(c.docs),
                     fillColor: "#fdbb4d",
                     color: "#ffffff",
                     weight: 2,
                     opacity: 0.8,
                     fillOpacity: 0.6
-                }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#fdbb4d;">' + item.country + '</strong><br><span style="font-size:18px;">' + item.docs + '</span><br>policy documents</div>', { className: 'bubble-popup' });
+                }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#fdbb4d;">' + c.name + '</strong><br><span style="font-size:18px;">' + c.docs + '</span><br>policy documents</div>', { className: 'bubble-popup' });
             }
             
-            // Add EU marker
             L.circleMarker([50.8503, 4.3517], {
                 radius: 28,
                 fillColor: "#fdbb4d",
@@ -338,9 +209,9 @@
                 weight: 2,
                 opacity: 0.8,
                 fillOpacity: 0.6
-            }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#fdbb4d;">European Union (IGO)</strong><br><span style="font-size:18px;">47</span><br>policy documents</div>', { className: 'bubble-popup' });
+            }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#fdbb4d;">European Union</strong><br><span style="font-size:18px;">47</span><br>policy documents</div>', { className: 'bubble-popup' });
             
-            console.log("Map loaded with clickable region buttons!");
+            console.log("World map loaded — use the buttons above to explore regions");
         });
     </script>
 </body>
