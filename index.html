@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>GBHI - Global Fellowship Networks | Atlantic Fellows for Equity in Brain Health</title>
+    <title>GBHI - Global Fellowship Networks</title>
     
-    <!-- Leaflet CSS + JS (single reliable CDN) -->
+    <!-- Leaflet CSS + JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -75,7 +75,7 @@
         
         .main-container { height: calc(100vh - 72px); position: relative; }
         .map-container { height: 100%; width: 100%; position: relative; background: #0a1a2a; }
-        #worldMap { height: 100%; width: 100%; background: #0a1a2a; }
+        #worldMap { height: 100%; width: 100%; background: #0a1a2a; min-height: 500px; }
         
         .legend-panel {
             position: absolute;
@@ -228,19 +228,30 @@
     </div>
     
     <script>
-        // Wait for the page to fully load before creating the map
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize world map
-            const worldMap = L.map('worldMap').setView([20, 0], 2);
+        // Wait for everything to load
+        window.addEventListener('load', function() {
+            console.log("Page fully loaded, creating map...");
             
-            // Natural color map tiles
+            // Check if Leaflet is available
+            if (typeof L === 'undefined') {
+                console.error("Leaflet not loaded!");
+                document.getElementById('worldMap').innerHTML = '<div style="color:white; padding:20px;">Error: Map library failed to load. Please refresh.</div>';
+                return;
+            }
+            
+            // Create map
+            var worldMap = L.map('worldMap').setView([20, 0], 2);
+            
+            // Add tile layer
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB',
+                attribution: '&copy; OSM & CartoDB',
                 maxZoom: 6,
                 minZoom: 2
             }).addTo(worldMap);
             
-            // Function to calculate radius based on doc count
+            console.log("Map created successfully");
+            
+            // Function to get radius
             function getRadius(docs) {
                 if (docs >= 300) return 48;
                 if (docs >= 150) return 38;
@@ -250,25 +261,25 @@
                 return 8;
             }
             
-            // Show loading overlay and navigate
+            // Navigation function
             function navigateTo(page) {
-                const overlay = document.getElementById('loadingOverlay');
+                var overlay = document.getElementById('loadingOverlay');
                 overlay.classList.add('active');
-                setTimeout(() => {
+                setTimeout(function() {
                     window.location.href = page;
-                }, 800);
+                }, 500);
             }
             
-            // BUBBLE DATA with THREE clickable regions
-            const bubbleData = [
-                // NORTH AMERICA
+            // Bubble data
+            var bubbles = [
+                // North America
                 { lat: 37.0902, lng: -95.7129, country: "USA", docs: 516, clickable: false },
                 { lat: 56.1304, lng: -106.3468, country: "Canada", docs: 56, clickable: false },
                 
-                // EUROPE - Spain is clickable for Mediterranean
+                // Europe - Spain is clickable
                 { lat: 55.3781, lng: -3.4360, country: "UK", docs: 262, clickable: false },
                 { lat: 51.1657, lng: 10.4515, country: "Germany", docs: 92, clickable: false },
-                { lat: 40.4637, lng: -3.7492, country: "🇪🇸 SPAIN (Mediterranean Network)", docs: 71, clickable: true, target: "mediterranean.html", regionName: "MEDITERRANEAN" },
+                { lat: 40.4637, lng: -3.7492, country: "🇪🇸 SPAIN (Mediterranean Network)", docs: 71, clickable: true, target: "mediterranean.html", label: "MEDITERRANEAN" },
                 { lat: 46.2276, lng: 2.2137, country: "France", docs: 41, clickable: false },
                 { lat: 46.8182, lng: 8.2275, country: "Switzerland", docs: 28, clickable: false },
                 { lat: 60.1282, lng: 18.6435, country: "Sweden", docs: 27, clickable: false },
@@ -280,28 +291,29 @@
                 { lat: 41.9028, lng: 12.4964, country: "Greece", docs: 5, clickable: false },
                 { lat: 38.9637, lng: 35.2433, country: "Turkey", docs: 6, clickable: false },
                 
-                // ASIA-PACIFIC - India is clickable for South Asia
+                // Asia - India is clickable
                 { lat: 35.8617, lng: 104.1954, country: "China", docs: 100, clickable: false },
                 { lat: 25.2744, lng: 133.7751, country: "Australia", docs: 92, clickable: false },
-                { lat: 20.5937, lng: 78.9629, country: "🇮🇳 INDIA (South Asia Network)", docs: 15, clickable: true, target: "south-asia.html", regionName: "SOUTH ASIA" },
+                { lat: 20.5937, lng: 78.9629, country: "🇮🇳 INDIA (South Asia Network)", docs: 15, clickable: true, target: "south-asia.html", label: "SOUTH ASIA" },
                 { lat: 36.2048, lng: 138.2529, country: "Japan", docs: 8, clickable: false },
                 { lat: 28.3949, lng: 84.1240, country: "Nepal", docs: 8, clickable: false },
                 { lat: 23.6850, lng: 90.3563, country: "Bangladesh", docs: 6, clickable: false },
                 
-                // AFRICA - Kenya is clickable for Africa network
-                { lat: -1.2864, lng: 36.8172, country: "🇰🇪 KENYA (Africa Network)", docs: 5, clickable: true, target: "africa.html", regionName: "AFRICA" },
+                // Africa - Kenya is clickable
+                { lat: -1.2864, lng: 36.8172, country: "🇰🇪 KENYA (Africa Network)", docs: 5, clickable: true, target: "africa.html", label: "AFRICA" },
                 { lat: 26.8206, lng: 30.8025, country: "Egypt", docs: 12, clickable: false },
                 { lat: -30.5595, lng: 22.9375, country: "South Africa", docs: 8, clickable: false },
                 
-                // SOUTH AMERICA
+                // South America
                 { lat: -14.2350, lng: -51.9253, country: "Brazil", docs: 20, clickable: false }
             ];
             
-            // Create bubbles
-            bubbleData.forEach(item => {
-                const radius = getRadius(item.docs);
+            // Add all bubbles
+            for (var i = 0; i < bubbles.length; i++) {
+                var item = bubbles[i];
+                var radius = getRadius(item.docs);
                 
-                const circle = L.circleMarker([item.lat, item.lng], {
+                var circle = L.circleMarker([item.lat, item.lng], {
                     radius: radius,
                     fillColor: "#fdbb4d",
                     color: "#ffffff",
@@ -310,25 +322,21 @@
                     fillOpacity: 0.75
                 }).addTo(worldMap);
                 
-                // Popup content
-                let popupContent = `<div style="text-align:center;">
-                    <strong style="color:#fdbb4d; font-size:14px;">${item.country}</strong><br>
-                    <span style="font-size:20px; font-weight:bold;">${item.docs}</span><br>
-                    <span style="font-size:10px;">policy documents</span>`;
+                var popupText = '<div style="text-align:center;"><strong style="color:#fdbb4d; font-size:14px;">' + item.country + '</strong><br><span style="font-size:20px; font-weight:bold;">' + item.docs + '</span><br><span style="font-size:10px;">policy documents</span>';
                 
                 if (item.clickable) {
-                    popupContent += `<hr><span style="color:#fdbb4d; font-size:12px;">✨ <strong>CLICK</strong> to explore ${item.regionName} Fellows ✨</span>`;
-                    circle.bindPopup(popupContent, { className: 'bubble-popup' });
-                    circle.on('click', () => {
-                        navigateTo(item.target);
-                    });
+                    popupText += '<hr><span style="color:#fdbb4d; font-size:12px;">✨ CLICK to explore ' + item.label + ' Fellows ✨</span>';
+                    circle.bindPopup(popupText, { className: 'bubble-popup' });
+                    circle.on('click', (function(target) {
+                        return function() { navigateTo(target); };
+                    })(item.target));
                 } else {
-                    popupContent += `</div>`;
-                    circle.bindPopup(popupContent, { className: 'bubble-popup' });
+                    popupText += '</div>';
+                    circle.bindPopup(popupText, { className: 'bubble-popup' });
                 }
-            });
+            }
             
-            // Add European Union marker
+            // Add EU marker
             L.circleMarker([50.8503, 4.3517], {
                 radius: 32,
                 fillColor: "#fdbb4d",
@@ -336,33 +344,27 @@
                 weight: 2.5,
                 opacity: 0.9,
                 fillOpacity: 0.75
-            }).addTo(worldMap).bindPopup(`
-                <div style="text-align:center;">
-                    <strong style="color:#fdbb4d;">European Union (IGO)</strong><br>
-                    <span style="font-size:22px; font-weight:bold;">47</span><br>
-                    policy documents
-                </div>
-            `, { className: 'bubble-popup' });
+            }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#fdbb4d;">European Union (IGO)</strong><br><span style="font-size:22px; font-weight:bold;">47</span><br>policy documents</div>', { className: 'bubble-popup' });
             
             // Add region highlight boxes
             L.rectangle([[5, 60], [38, 98]], {
                 color: "#fdbb4d", weight: 1.5, fillColor: "#fdbb4d", fillOpacity: 0.03, dashArray: "8, 6"
-            }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#fdbb4d;">🌏 South Asia Region</strong><br>Click the INDIA gold bubble</div>', { className: 'bubble-popup' });
+            }).addTo(worldMap);
             
             L.rectangle([[30, -10], [46, 36]], {
                 color: "#ff8c00", weight: 1.5, fillColor: "#ff8c00", fillOpacity: 0.03, dashArray: "8, 6"
-            }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#ff8c00;">🌊 Mediterranean Region</strong><br>Click the SPAIN gold bubble</div>', { className: 'bubble-popup' });
+            }).addTo(worldMap);
             
             L.rectangle([[-35, -20], [37, 55]], {
                 color: "#44aa44", weight: 1.5, fillColor: "#44aa44", fillOpacity: 0.03, dashArray: "8, 6"
-            }).addTo(worldMap).bindPopup('<div style="text-align:center;"><strong style="color:#44aa44;">🌍 Africa Region</strong><br>Click the KENYA gold bubble</div>', { className: 'bubble-popup' });
+            }).addTo(worldMap);
             
             // Reset button
-            document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('resetBtn').addEventListener('click', function() {
                 worldMap.setView([20, 0], 2);
             });
             
-            console.log("🌍 GBHI Global Map Loaded with 3 clickable regions");
+            console.log("All bubbles added successfully!");
         });
     </script>
 </body>
